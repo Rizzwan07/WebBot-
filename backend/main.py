@@ -50,7 +50,7 @@ class SourceResponse(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    """Search results with Gemini-generated answer."""
+    """Search results with Groq-generated answer."""
 
     query: str
     answer: str

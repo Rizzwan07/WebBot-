@@ -1,23 +1,26 @@
-import React from "react";
+import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import CitationTooltip from "./CitationTooltip";
 
 /**
  * Recursively walk React children and replace [N] citation markers
  * with interactive CitationTooltip components.
+ * Max depth guard prevents stack overflow on unexpected element structures.
  */
-function renderWithCitations(children, sources) {
+function renderWithCitations(children, sources, depth = 0) {
   if (!sources || sources.length === 0) return children;
+  if (depth > 10) return children; // Bug #3: max-depth guard
 
   return React.Children.map(children, (child) => {
     if (typeof child === "string") {
       return splitCitations(child, sources);
     }
 
-    if (React.isValidElement(child) && child.props.children) {
+    // Bug #4: use != null instead of truthy check for children
+    if (React.isValidElement(child) && child.props.children != null) {
       return React.cloneElement(child, {
         ...child.props,
-        children: renderWithCitations(child.props.children, sources),
+        children: renderWithCitations(child.props.children, sources, depth + 1),
       });
     }
 
@@ -61,7 +64,8 @@ function splitCitations(text, sources) {
   return parts.length > 0 ? parts : text;
 }
 
-function getCitationComponents(sources) {
+// Bug #18: Extended to cover headings and blockquote too
+function createCitationComponents(sources) {
   const wrap =
     (Tag) =>
     ({ children, ...props }) => (
@@ -74,11 +78,24 @@ function getCitationComponents(sources) {
     td: wrap("td"),
     strong: wrap("strong"),
     em: wrap("em"),
+    h1: wrap("h1"),
+    h2: wrap("h2"),
+    h3: wrap("h3"),
+    h4: wrap("h4"),
+    h5: wrap("h5"),
+    h6: wrap("h6"),
+    blockquote: wrap("blockquote"),
   };
 }
 
 const MessageBubble = ({ role, content, sources }) => {
   if (role === "user") return null;
+
+  // Bug #19: Memoize to avoid recreating wrappers on every render
+  const citationComponents = useMemo(
+    () => createCitationComponents(sources || []),
+    [sources]
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -90,7 +107,7 @@ const MessageBubble = ({ role, content, sources }) => {
       </div>
 
       <div className="prose prose-slate max-w-none text-textPrimary leading-relaxed prose-p:my-2.5 prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-headings:text-textPrimary">
-        <ReactMarkdown components={getCitationComponents(sources || [])}>
+        <ReactMarkdown components={citationComponents}>
           {content}
         </ReactMarkdown>
       </div>

@@ -41,15 +41,21 @@ function App() {
         body: JSON.stringify({ query }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        const detail = data.detail;
-        const message = Array.isArray(detail)
-          ? detail.map((e) => e.msg).join(", ")
-          : detail || "Request failed";
+        let message = `Request failed (${response.status})`;
+        try {
+          const errData = await response.json();
+          const detail = errData.detail;
+          message = Array.isArray(detail)
+            ? detail.map((e) => e.msg).join(", ")
+            : detail || message;
+        } catch {
+          // Response wasn't JSON (e.g. 502 HTML page)
+        }
         throw new Error(message);
       }
+
+      const data = await response.json();
 
       const answer =
         data.answer?.trim() || "No answer was generated. Please try again.";
@@ -74,7 +80,7 @@ function App() {
   return (
     <div className="flex bg-bgMain text-textPrimary h-screen w-full font-sans overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-60 bg-bgSidebar flex flex-col border-r border-borderLight p-4 hidden md:flex">
+      <aside className="w-60 bg-bgSidebar flex-col border-r border-borderLight p-4 hidden md:flex">
         <div className="flex items-center gap-2.5 px-2 py-4 mb-4 select-none">
           <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center text-white text-xs font-bold">
             W
@@ -114,10 +120,10 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto w-full px-4 py-8 pb-32">
+            <div className="max-w-3xl mx-auto w-full px-4 py-8 pb-40">
               {error && (
-                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-                  {error}
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                  <span className="font-medium">Error:</span> {error}
                 </div>
               )}
               <ChatBox
@@ -132,7 +138,7 @@ function App() {
 
         {/* Sticky Bottom Search Bar */}
         {isThreadActive && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-bgMain via-bgMain/95 to-transparent pt-12 pb-6 px-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-bgMain via-bgMain/95 to-transparent pt-12 pb-6 px-4">
             <div className="max-w-2xl mx-auto w-full">
               <SearchBar
                 onSearch={handleSearch}

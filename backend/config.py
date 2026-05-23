@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     api_port: int = 8080
     debug: bool = True
 
-    gemini_api_key: str = ""
+    groq_api_key: str = ""
     exa_api_key: str = ""
 
     class Config:

@@ -20,7 +20,7 @@ const SourcesPanel = ({ sources }) => {
                 href={source.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col gap-1.5 w-44 min-w-[11rem] bg-bgPanel hover:bg-borderLight border border-borderLight rounded-xl p-3 select-none snap-start transition-colors"
+                className="flex flex-col gap-1.5 w-44 min-w-44 bg-bgPanel hover:bg-borderLight border border-borderLight rounded-xl p-3 select-none snap-start transition-colors"
               >
                 <div className="truncate text-xs font-medium text-textPrimary">
                   {source.title}
@@ -32,9 +32,9 @@ const SourcesPanel = ({ sources }) => {
                     className="w-3.5 h-3.5 rounded-sm"
                   />
                   <span className="truncate">{domain}</span>
-                  <span className="ml-auto bg-bgMain text-[10px] text-textMuted px-1.5 py-0.5 rounded-full font-mono border border-borderLight">
-                    {idx + 1}
-                  </span>
+              <span className="ml-auto bg-accent/10 text-[10px] text-accent px-1.5 py-0.5 rounded-full font-mono font-semibold">
+                {idx + 1}
+              </span>
                 </div>
               </a>
             );

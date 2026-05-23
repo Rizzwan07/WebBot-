@@ -41,7 +41,7 @@ const ChatBox = ({ messages, loading, onSearch }) => {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3 text-accent font-medium text-sm">
             <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
-            Searching the web...
+            <span>Searching the web...</span>
           </div>
         </div>
       )}

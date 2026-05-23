@@ -1,8 +1,8 @@
 """
-Format Exa search results into a prompt-ready context block for Gemini.
+Format Exa search results into a prompt-ready context block for the LLM.
 """
 
-MAX_CONTENT_CHARS = 4000
+MAX_CONTENT_CHARS = 6000
 
 
 def format_search_context(sources: list[dict]) -> str:
@@ -32,5 +32,5 @@ def format_search_context(sources: list[dict]) -> str:
 
 
 def context_has_substance(context: str, min_chars: int = 80) -> bool:
-    """True if context has enough text for Gemini to summarize."""
+    """True if context has enough text for the LLM to summarize."""
     return len(context.strip()) >= min_chars

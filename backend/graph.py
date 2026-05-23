@@ -3,11 +3,12 @@ LangGraph workflow for WebBot AI.
 
 User query
     → intent detection
-        → chat  → direct LLM (Gemini)
+        → chat  → direct LLM (Groq)
         → search → Exa → format context → LLM answer → follow-ups
 """
 
 import re
+import logging
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -15,6 +16,8 @@ from langgraph.graph import END, START, StateGraph
 from context import context_has_substance, format_search_context
 from llm import chat_direct, detect_intent, generate_answer, generate_follow_ups
 from search import search_web
+
+logger = logging.getLogger(__name__)
 
 
 class Source(TypedDict):
@@ -107,7 +110,11 @@ async def generate_node(state: WorkflowState) -> dict:
         if not answer or not answer.strip():
             return {"answer": "I found some sources but couldn't generate a clear answer. Try rephrasing your question."}
         return {"answer": answer}
-    except Exception:
+    except Exception as exc:
+        logger.exception("generate_answer failed: %s", exc)
+        err_str = str(exc)
+        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+            return {"answer": "I'm experiencing high demand right now. Please wait a few seconds and try again. 🔄"}
         return {"answer": "I found some sources but ran into an issue generating an answer. Please try again."}
 
 

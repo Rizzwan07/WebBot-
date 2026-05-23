@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 
 const SearchBar = ({ onSearch, loading, isSticky = false }) => {
   const [query, setQuery] = useState("");
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (isSticky && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isSticky]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -10,6 +17,10 @@ const SearchBar = ({ onSearch, loading, isSticky = false }) => {
     if (!trimmed || loading) return;
     onSearch(trimmed);
     setQuery("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.focus();
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -25,13 +36,17 @@ const SearchBar = ({ onSearch, loading, isSticky = false }) => {
       className="relative w-full bg-bgMain rounded-2xl border border-borderLight focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/10 transition-all shadow-sm flex flex-col"
     >
       <textarea
+        ref={textareaRef}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onInput={(e) => {
+          e.target.style.height = "auto";
+          e.target.style.height = e.target.scrollHeight + "px";
+        }}
         onKeyDown={handleKeyDown}
         placeholder="Ask anything..."
-        disabled={loading}
         rows={1}
-        className="w-full bg-transparent text-textPrimary placeholder:text-textMuted/60 py-4 px-5 resize-none outline-none disabled:opacity-60 overflow-hidden leading-relaxed block overflow-auto"
+        className="w-full bg-transparent text-textPrimary placeholder:text-textMuted/60 py-4 px-5 resize-none outline-none leading-relaxed block overflow-auto"
         style={{ minHeight: isSticky ? "52px" : "72px", maxHeight: "200px" }}
       />
       <div className="flex items-center justify-end px-3 pb-3 pt-0">

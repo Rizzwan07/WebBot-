@@ -61,10 +61,10 @@ const CitationTooltip = ({ id, source }) => {
               <img
                 src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
                 alt=""
-                className="w-4 h-4 rounded-sm flex-shrink-0"
+                className="w-4 h-4 rounded-sm shrink-0"
               />
               <span className="text-xs text-textMuted truncate">{domain}</span>
-              <span className="ml-auto bg-bgPanel text-[10px] text-textMuted px-1.5 py-0.5 rounded-full font-mono flex-shrink-0">
+              <span className="ml-auto bg-bgPanel text-[10px] text-textMuted px-1.5 py-0.5 rounded-full font-mono shrink-0">
                 {id}
               </span>
             </div>

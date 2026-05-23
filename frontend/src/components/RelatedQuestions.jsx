@@ -22,7 +22,7 @@ const RelatedQuestions = ({ questions, onSearch }) => {
             <span className="text-sm leading-relaxed">{q}</span>
             <Plus
               size={16}
-              className="text-textMuted group-hover:text-accent flex-shrink-0 transition-colors"
+              className="text-textMuted group-hover:text-accent shrink-0 transition-colors"
             />
           </button>
         ))}
