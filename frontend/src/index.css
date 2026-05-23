@@ -1,0 +1,48 @@
+/* Google Fonts must come before @import "tailwindcss" in Tailwind v4 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Tailwind v4: define custom design tokens via @theme */
+@theme {
+  --color-bgMain: #FFFFFF;
+  --color-bgSidebar: #F7F7F8;
+  --color-bgPanel: #F0F0F2;
+  --color-textPrimary: #1B1B1B;
+  --color-textMuted: #64748B;
+  --color-accent: #1CB0A0;
+  --color-borderLight: #E8E8ED;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bgMain);
+    color: var(--color-textPrimary);
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
