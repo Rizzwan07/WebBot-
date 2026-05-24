@@ -27,10 +27,16 @@ app.add_middleware(
 # --- Pydantic Models ---
 
 
+class MessageField(BaseModel):
+    role: str
+    content: str
+
+
 class ChatRequest(BaseModel):
     """Request model for user queries."""
 
     query: str = Field(..., min_length=1, description="User search question")
+    history: list[MessageField] = Field(default_factory=list)
 
     @field_validator("query")
     @classmethod
@@ -73,7 +79,7 @@ async def chat_endpoint(request: ChatRequest):
     Intent → chat (direct LLM) or search (Exa → LLM with citations).
     """
     try:
-        result = await run_search_pipeline(request.query)
+        result = await run_search_pipeline(request.query, [m.model_dump() for m in request.history])
     except (SearchConfigError, LLMConfigError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except (SearchAPIError, LLMAPIError) as exc:

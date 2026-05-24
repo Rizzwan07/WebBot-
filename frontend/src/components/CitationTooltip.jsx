@@ -1,22 +1,32 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 
-const CitationTooltip = ({ id, source }) => {
+/**
+ * Perplexity-style citation tooltip.
+ *
+ * Accepts an array of sources (grouped adjacent citations like [1][2][3])
+ * and shows a single badge. On hover, a popup appears with < > navigation
+ * to browse all sources in the group.
+ */
+const CitationTooltip = ({ ids, sources }) => {
   const [show, setShow] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const timeoutRef = useRef(null);
 
-  if (!source) {
+  // Reset activeIndex when sources/ids change to avoid out-of-bounds state
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [ids, sources]);
+
+  // Filter to only valid sources
+  const validSources = (sources || []).filter(Boolean);
+
+  if (validSources.length === 0) {
     return (
-      <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-bgPanel text-textMuted rounded-full mx-0.5 align-super">
-        {id}
+      <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[9px] font-bold bg-bgPanel text-textMuted rounded-full mx-[1.5px] leading-none align-middle">
+        {ids.join(",")}
       </span>
     );
-  }
-
-  let domain;
-  try {
-    domain = new URL(source.url).hostname.replace("www.", "");
-  } catch {
-    domain = source.url;
   }
 
   const handleEnter = () => {
@@ -25,59 +35,132 @@ const CitationTooltip = ({ id, source }) => {
   };
 
   const handleLeave = () => {
-    timeoutRef.current = setTimeout(() => setShow(false), 150);
+    timeoutRef.current = setTimeout(() => setShow(false), 250);
   };
+
+  const goNext = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setActiveIndex((i) => (i + 1) % validSources.length);
+  };
+
+  const goPrev = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setActiveIndex((i) => (i - 1 + validSources.length) % validSources.length);
+  };
+
+  const activeSource = validSources[activeIndex];
+  let domain = "";
+  try {
+    domain = activeSource.url ? new URL(activeSource.url).hostname.replace("www.", "") : "";
+  } catch {
+    domain = "";
+  }
+
+  // Badge label: single number or grouped count
+  const badgeLabel =
+    ids.length === 1 ? String(ids[0]) : ids.join(",");
 
   return (
     <span className="relative inline-block">
-      <a
-        href={source.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-accent/15 text-accent rounded-full hover:bg-accent/25 cursor-pointer transition-colors no-underline mx-0.5 align-super"
+      <span
+        className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[9px] font-bold bg-accent/15 text-accent rounded-full hover:bg-accent/25 cursor-pointer transition-colors no-underline mx-[1.5px] leading-none align-middle select-none"
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
       >
-        {id}
-      </a>
+        {badgeLabel}
+      </span>
 
       {show && (
         <div
           onMouseEnter={handleEnter}
           onMouseLeave={handleLeave}
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-bgMain border border-borderLight rounded-xl p-3 shadow-xl z-50"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-80 bg-bgMain border border-borderLight rounded-xl p-3 shadow-xl z-50"
           style={{ animation: "fadeIn 0.15s ease-out" }}
         >
           {/* Arrow */}
           <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-bgMain border-r border-b border-borderLight rotate-45" />
 
+          {/* Navigation header — only show if multiple sources */}
+          {validSources.length > 1 && (
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-borderLight">
+              <button
+                onClick={goPrev}
+                className="p-0.5 rounded hover:bg-bgPanel transition-colors text-textMuted hover:text-textPrimary"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <span className="text-[10px] text-textMuted font-medium">
+                {activeIndex + 1} / {validSources.length}
+              </span>
+              <button
+                onClick={goNext}
+                className="p-0.5 rounded hover:bg-bgPanel transition-colors text-textMuted hover:text-textPrimary"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Source card */}
           <a
-            href={source.url}
+            href={activeSource.url}
             target="_blank"
             rel="noopener noreferrer"
             className="block no-underline group"
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-1.5">
               <img
                 src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
                 alt=""
                 className="w-4 h-4 rounded-sm shrink-0"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
               />
-              <span className="text-xs text-textMuted truncate">{domain}</span>
+              <span className="text-xs text-textMuted truncate group-hover:underline">
+                {domain}
+              </span>
+              <ExternalLink
+                size={12}
+                className="text-textMuted group-hover:text-accent shrink-0 transition-colors"
+              />
               <span className="ml-auto bg-bgPanel text-[10px] text-textMuted px-1.5 py-0.5 rounded-full font-mono shrink-0">
-                {id}
+                {ids[activeIndex] ?? ids[0]}
               </span>
             </div>
             <div className="text-sm font-medium text-textPrimary group-hover:text-accent line-clamp-2 leading-snug transition-colors">
-              {source.title}
+              {activeSource.title}
             </div>
-            {source.content && (
+            {activeSource.content && (
               <div className="text-xs text-textMuted mt-1.5 line-clamp-2 leading-relaxed">
-                {source.content.substring(0, 120)}
-                {source.content.length > 120 ? "…" : ""}
+                {activeSource.content.substring(0, 150)}
+                {activeSource.content.length > 150 ? "…" : ""}
               </div>
             )}
           </a>
+
+          {/* Source dots indicator */}
+          {validSources.length > 1 && (
+            <div className="flex items-center justify-center gap-1 mt-2 pt-2 border-t border-borderLight">
+              {validSources.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setActiveIndex(i);
+                  }}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                    i === activeIndex
+                      ? "bg-accent"
+                      : "bg-bgPanel hover:bg-textMuted/30"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </span>

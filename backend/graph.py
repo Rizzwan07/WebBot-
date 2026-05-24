@@ -29,6 +29,7 @@ class Source(TypedDict):
 
 class WorkflowState(TypedDict, total=False):
     query: str
+    history: list[dict]
     intent: str  # "chat" | "search"
     search_query: str
     search_results: list[dict]
@@ -89,9 +90,10 @@ async def context_builder_node(state: WorkflowState) -> dict:
 
 async def generate_node(state: WorkflowState) -> dict:
     """Direct LLM for chat, or grounded LLM answer after Exa search."""
+    history = state.get("history", [])
     if state.get("intent") == "chat":
         try:
-            answer = await chat_direct(state["query"])
+            answer = await chat_direct(state["query"], history)
             return {"answer": answer}
         except Exception:
             return {"answer": "Hey there! 👋 I'm WebBot AI. Ask me anything and I'll search the web for you!"}
@@ -106,7 +108,7 @@ async def generate_node(state: WorkflowState) -> dict:
         }
 
     try:
-        answer = await generate_answer(state["query"], context)
+        answer = await generate_answer(state["query"], context, history)
         if not answer or not answer.strip():
             return {"answer": "I found some sources but couldn't generate a clear answer. Try rephrasing your question."}
         return {"answer": answer}
@@ -125,7 +127,8 @@ async def followup_node(state: WorkflowState) -> dict:
 
     query = state.get("query", "")
     answer = state.get("answer", "")
-    questions = await generate_follow_ups(query, answer)
+    history = state.get("history", [])
+    questions = await generate_follow_ups(query, answer, history)
     return {"follow_up_questions": questions}
 
 
@@ -147,8 +150,8 @@ _graph.add_edge("followup", END)
 chat_pipeline = _graph.compile()
 
 
-async def run_search_pipeline(user_query: str) -> dict:
-    result = await chat_pipeline.ainvoke({"query": user_query})
+async def run_search_pipeline(user_query: str, history: list | None = None) -> dict:
+    result = await chat_pipeline.ainvoke({"query": user_query, "history": history or []})
     return {
         "query": result.get("query", user_query),
         "sources": result.get("sources", []),

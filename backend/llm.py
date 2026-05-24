@@ -170,41 +170,60 @@ User message: {message}"""
         return fallback
 
 
-async def chat_direct(message: str) -> str:
+def _format_history(history: list[dict]) -> str:
+    if not history:
+        return ""
+    lines = []
+    for msg in history:
+        role = "User" if msg.get("role") == "user" else "Assistant"
+        lines.append(f"{role}: {msg.get('content', '')}")
+    return "\n".join(lines)
+
+
+async def chat_direct(message: str, history: list | None = None) -> str:
     """Direct LLM reply for casual conversation (no Exa search)."""
+    history_block = ""
+    if history:
+        formatted = _format_history(history)
+        history_block = f"\nPrevious conversation:\n{formatted}\n\n"
+
     prompt = f"""You are WebBot AI, a friendly, warm, and helpful AI assistant.
 The user is chatting casually. Respond in a friendly, engaging, and highly concise manner (1-2 sentences).
 Do not include any links, citations, or search sources.
-
-User message: {message}
+{history_block}User message: {message}
 
 Friendly, concise reply:"""
     return await _generate_text(prompt, max_output_tokens=256)
 
 
-def _build_answer_prompt(query: str, context: str) -> str:
+def _build_answer_prompt(query: str, context: str, history: list | None = None) -> str:
+    history_block = ""
+    if history:
+        formatted = _format_history(history)
+        history_block = f"\nPrevious conversation:\n{formatted}\n\n"
+
     return f"""You are WebBot AI, a friendly and professional AI web research assistant.
 
 Using the search context provided, write a comprehensive, well-structured answer to the user's question.
+{history_block}
 
 FORMATTING RULES:
 1. Start with ONE concise intro sentence (max 2 lines) that frames the answer. Then go straight to the data.
-2. For list/comparison questions ("best colleges", "top 10", "compare X vs Y"):
-   - Use a NUMBERED LIST, NOT a markdown table.
+2. For list/comparison questions:
+   - Use a NUMBERED LIST.
    - Each item: **Bold Name** — detail 1; detail 2; detail 3.
    - Example: **NIT Trichy** — Total fees: ~Rs. 3.35 lakh; Average package: ~Rs. 16 LPA [1].
-   - Include 8-10 items if context supports it.
+   - List ONLY what the search context supports. Do NOT invent entries.
 3. For simple factual questions: give a concise 2-4 sentence answer.
 4. After the main list, add a "**Notes and guidance**" section with 2-3 practical tips.
-5. End with a conversational closing that offers to go deeper (e.g., "If you want, I can fetch official placement reports for these — shall I proceed?").
+5. End with a conversational closing that offers to go deeper.
 
 CONTENT RULES:
-- Always cite sources inline using [1], [2], etc.
-- Use approximate ranges where exact data varies (e.g., "~Rs. 3-5 lakh").
-- If data is missing for an item, write the item anyway with "fees/package data not available".
+- Cite every fact using the source numbers you see in the context (e.g., [1], [2]).
+- If a fact is not in the context, do NOT cite it.
+- Use approximate ranges where exact data varies.
 - Never cut off mid-sentence. Always complete your thoughts.
 - Do NOT copy long passages. Synthesize into your own words.
-- Keep it practical and helpful — mention ROI, entrance exams, or tips where relevant.
 
 Context:
 {context}
@@ -220,7 +239,7 @@ def _truncate_context(context: str, max_chars: int = 6000) -> str:
     return context[:max_chars] + "\n\n[Context truncated due to length.]"
 
 
-async def generate_answer(query: str, context: str) -> str:
+async def generate_answer(query: str, context: str, history: list | None = None) -> str:
     """Grounded answer from Exa context (web search path)."""
     from context import context_has_substance
 
@@ -230,7 +249,7 @@ async def generate_answer(query: str, context: str) -> str:
             "to answer your question."
         )
 
-    prompt = _build_answer_prompt(query, _truncate_context(context))
+    prompt = _build_answer_prompt(query, _truncate_context(context), history)
     answer = await _generate_text(prompt, max_output_tokens=8000)
 
     if _looks_like_link_only(answer):
@@ -256,10 +275,15 @@ def _looks_like_link_only(text: str) -> bool:
     return link_like >= len(lines) and len(lines) <= 6
 
 
-async def generate_follow_ups(query: str, answer: str) -> list[str]:
+async def generate_follow_ups(query: str, answer: str, history: list | None = None) -> list[str]:
     """Generate 3 related follow-up questions based on the conversation."""
-    prompt = f"""Based on this Q&A, suggest exactly 3 follow-up questions the user might ask next.
+    history_block = ""
+    if history:
+        formatted = _format_history(history)
+        history_block = f"\nPrevious conversation:\n{formatted}\n"
 
+    prompt = f"""Based on this Q&A, suggest exactly 3 follow-up questions the user might ask next.
+{history_block}
 Question: {query}
 Answer: {answer}
 

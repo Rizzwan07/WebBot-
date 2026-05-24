@@ -18,7 +18,7 @@ class SearchAPIError(Exception):
 
 _exa_client: AsyncExa | None = None
 
-DEFAULT_NUM_RESULTS = 5
+DEFAULT_NUM_RESULTS = 4
 
 
 def _get_exa_client() -> AsyncExa:
@@ -66,10 +66,10 @@ async def search_web(query: str, num_results: int = DEFAULT_NUM_RESULTS) -> list
             num_results=num_results,
             type="auto",
             contents={
-                "text": {"maxCharacters": 1500},
+                "text": {"maxCharacters": 400},
                 "highlights": {
-                    "maxCharacters": 1000,
-                    "numSentences": 5,
+                    "maxCharacters": 300,
+                    "numSentences": 2,
                 },
             },
         )

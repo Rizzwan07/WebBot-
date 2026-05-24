@@ -33,6 +33,11 @@
   }
 }
 
+@utility bg-dot-pattern {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -42,4 +47,13 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.55; }
+}
+
+@utility animate-pulse-soft {
+  animation: pulse-soft 10s infinite ease-in-out;
 }

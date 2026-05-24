@@ -30,6 +30,9 @@ const SourcesPanel = ({ sources }) => {
                     src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
                     alt=""
                     className="w-3.5 h-3.5 rounded-sm"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
                   />
                   <span className="truncate">{domain}</span>
               <span className="ml-auto bg-accent/10 text-[10px] text-accent px-1.5 py-0.5 rounded-full font-mono font-semibold">

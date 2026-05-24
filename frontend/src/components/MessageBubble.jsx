@@ -5,18 +5,17 @@ import CitationTooltip from "./CitationTooltip";
 /**
  * Recursively walk React children and replace [N] citation markers
  * with interactive CitationTooltip components.
- * Max depth guard prevents stack overflow on unexpected element structures.
+ * Adjacent citations like [1][2][3] are grouped into a single tooltip.
  */
 function renderWithCitations(children, sources, depth = 0) {
   if (!sources || sources.length === 0) return children;
-  if (depth > 10) return children; // Bug #3: max-depth guard
+  if (depth > 10) return children;
 
   return React.Children.map(children, (child) => {
     if (typeof child === "string") {
       return splitCitations(child, sources);
     }
 
-    // Bug #4: use != null instead of truthy check for children
     if (React.isValidElement(child) && child.props.children != null) {
       return React.cloneElement(child, {
         ...child.props,
@@ -29,32 +28,47 @@ function renderWithCitations(children, sources, depth = 0) {
 }
 
 /**
- * Split a text string by [N] citation patterns and return an array
- * of text segments and CitationTooltip components.
+ * Split a text string by [N] citation patterns, grouping adjacent
+ * citations (e.g. [1][2][3]) into a single CitationTooltip.
  */
 function splitCitations(text, sources) {
-  const regex = /\[(\d+)\]/g;
+  // Match groups of adjacent citations like [1][2][3] or single [1]
+  const groupRegex = /(\[\d+\](?:\s*\[\d+\])*)/g;
   const parts = [];
   let lastIndex = 0;
   let match;
 
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = groupRegex.exec(text)) !== null) {
+    // Push text before the citation group
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
 
-    const citationId = parseInt(match[1], 10);
-    const source = sources.find((s) => s.id === citationId);
+    // Extract all individual citation IDs from the group
+    const group = match[1];
+    const idRegex = /\[(\d+)\]/g;
+    const ids = [];
+    const groupSources = [];
+    let idMatch;
+
+    while ((idMatch = idRegex.exec(group)) !== null) {
+      const citationId = parseInt(idMatch[1], 10);
+      const source = sources.find((s) => s.id === citationId);
+      if (source) {
+        ids.push(citationId);
+        groupSources.push(source);
+      }
+    }
 
     parts.push(
       <CitationTooltip
-        key={`cite-${match.index}-${citationId}`}
-        id={citationId}
-        source={source}
+        key={`cite-group-${match.index}-${ids.join("-")}`}
+        ids={ids}
+        sources={groupSources}
       />
     );
 
-    lastIndex = regex.lastIndex;
+    lastIndex = groupRegex.lastIndex;
   }
 
   if (lastIndex < text.length) {
@@ -64,7 +78,6 @@ function splitCitations(text, sources) {
   return parts.length > 0 ? parts : text;
 }
 
-// Bug #18: Extended to cover headings and blockquote too
 function createCitationComponents(sources) {
   const wrap =
     (Tag) =>
@@ -91,7 +104,6 @@ function createCitationComponents(sources) {
 const MessageBubble = ({ role, content, sources }) => {
   if (role === "user") return null;
 
-  // Bug #19: Memoize to avoid recreating wrappers on every render
   const citationComponents = useMemo(
     () => createCitationComponents(sources || []),
     [sources]

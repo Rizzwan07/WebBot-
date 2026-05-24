@@ -6,10 +6,10 @@ const SearchBar = ({ onSearch, loading, isSticky = false }) => {
   const textareaRef = useRef(null);
 
   useEffect(() => {
-    if (isSticky && textareaRef.current) {
+    if (textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [isSticky]);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
