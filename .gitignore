@@ -6,7 +6,6 @@ __pycache__/
 *.pyd
 
 # Virtual environments
-.env
 .venv
 env/
 venv/
@@ -48,7 +47,11 @@ ehthumbs.db
 
 # ===== Misc =====
 *.local
+
+# ===== Environment Configuration =====
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
