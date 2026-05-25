@@ -102,12 +102,12 @@ function createCitationComponents(sources) {
 }
 
 const MessageBubble = ({ role, content, sources }) => {
-  if (role === "user") return null;
-
   const citationComponents = useMemo(
     () => createCitationComponents(sources || []),
     [sources]
   );
+
+  if (role === "user") return null;
 
   return (
     <div className="flex flex-col gap-2">

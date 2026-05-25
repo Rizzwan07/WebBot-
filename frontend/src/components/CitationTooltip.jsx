@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
@@ -9,17 +9,15 @@ import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
  * to browse all sources in the group.
  */
 const CitationTooltip = ({ ids, sources }) => {
+  // Filter to only valid sources
+  const validSources = (sources || []).filter(Boolean);
+
   const [show, setShow] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const timeoutRef = useRef(null);
 
-  // Reset activeIndex when sources/ids change to avoid out-of-bounds state
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [ids, sources]);
-
-  // Filter to only valid sources
-  const validSources = (sources || []).filter(Boolean);
+  // Clamp activeIndex to valid range
+  const safeActiveIndex = Math.min(activeIndex, Math.max(0, validSources.length - 1));
 
   if (validSources.length === 0) {
     return (
@@ -50,10 +48,12 @@ const CitationTooltip = ({ ids, sources }) => {
     setActiveIndex((i) => (i - 1 + validSources.length) % validSources.length);
   };
 
-  const activeSource = validSources[activeIndex];
+  const activeSource = validSources[safeActiveIndex];
   let domain = "";
   try {
-    domain = activeSource.url ? new URL(activeSource.url).hostname.replace("www.", "") : "";
+    if (activeSource.url) {
+      domain = new URL(activeSource.url).hostname.replace("www.", "");
+    }
   } catch {
     domain = "";
   }
@@ -92,7 +92,7 @@ const CitationTooltip = ({ ids, sources }) => {
                 <ChevronLeft size={14} />
               </button>
               <span className="text-[10px] text-textMuted font-medium">
-                {activeIndex + 1} / {validSources.length}
+                {safeActiveIndex + 1} / {validSources.length}
               </span>
               <button
                 onClick={goNext}
@@ -127,7 +127,7 @@ const CitationTooltip = ({ ids, sources }) => {
                 className="text-textMuted group-hover:text-accent shrink-0 transition-colors"
               />
               <span className="ml-auto bg-bgPanel text-[10px] text-textMuted px-1.5 py-0.5 rounded-full font-mono shrink-0">
-                {ids[activeIndex] ?? ids[0]}
+                {ids[safeActiveIndex] ?? ids[0]}
               </span>
             </div>
             <div className="text-sm font-medium text-textPrimary group-hover:text-accent line-clamp-2 leading-snug transition-colors">
@@ -153,7 +153,7 @@ const CitationTooltip = ({ ids, sources }) => {
                     setActiveIndex(i);
                   }}
                   className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                    i === activeIndex
+                    i === safeActiveIndex
                       ? "bg-accent"
                       : "bg-bgPanel hover:bg-textMuted/30"
                   }`}
