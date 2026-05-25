@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = str(_env_path)
+        extra = "ignore"  # Ignore extra fields like VITE_API_URL
 
 
 settings = Settings()
