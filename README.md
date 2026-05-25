@@ -4,7 +4,7 @@ A Perplexity-style AI web search chatbot with live citations, multi-thread conve
 
 **Stack:** FastAPI + React (Vite) + Groq (llama-3.3-70b) + Exa AI + LangGraph + Tailwind CSS v4
 
-**Live Demo:** [https://webbot-five.vercel.app](https://webbot-five.vercel.app)
+**Live Demo:** [https://webbot-five.vercel.app](https://webbot-five.vercel.app) (Frontend only - run backend locally for full functionality)
 
 ---
 
@@ -143,7 +143,7 @@ Prior Q&A is injected into the LLM's system prompt so follow-ups like *"how much
 - **Backend:** FastAPI, LangGraph, Pydantic v2
 - **LLM:** Groq — `llama-3.3-70b-versatile` (primary), `llama-3.1-8b-instant` (fallback)
 - **Search:** Exa AI — 4 results, 400 chars text + 300 chars highlights per result
-- **Deployment:** Frontend on Vercel (static), Backend runs separately
+- **Deployment:** Frontend on Vercel (static), Backend runs locally
 
 ---
 
@@ -156,24 +156,24 @@ The frontend is deployed on Vercel and automatically rebuilds on every push to `
 1. Fork this repository
 2. Import to [Vercel](https://vercel.com/new)
 3. Set root directory to `frontend`
-4. Deploy!
+4. Deploy
 
-### Backend (Local/Server)
-The Python FastAPI backend needs to be deployed separately. Options:
+The Vercel deployment shows the UI but requires a backend connection for full functionality.
 
-**Local Development:**
+### Backend (Local)
+Currently runs locally for development:
+
 ```bash
 cd backend
 uvicorn main:app --reload --port 8080
 ```
 
-**Production Deployment Options:**
-- **Railway** - Easiest Python hosting, automatic deploys from GitHub
-- **Render** - Good free tier, simple setup
-- **Fly.io** - More control and flexibility
-- **AWS/GCP/Azure** - Traditional cloud platforms
+**For production deployment**, consider:
+- **Render** - Free tier with Python support
+- **Fly.io** - Flexible deployment options
+- **AWS/GCP/Azure** - Enterprise cloud platforms
 
-After deploying the backend, update the `VITE_API_URL` environment variable in your Vercel project settings to point to your deployed backend URL.
+After deploying backend to production, update `VITE_API_URL` in Vercel environment variables.
 
 ---
 
@@ -214,6 +214,20 @@ webbot-ai/
 ├── .env             # Environment variables (not in git)
 └── README.md        # This file
 ```
+
+---
+
+## Development Notes
+
+### Keep Your Project Clean
+The `.gitignore` file automatically excludes:
+- Python cache (`__pycache__/`, `*.pyc`)
+- Node modules (`node_modules/`)
+- Virtual environments (`venv/`, `webevn/`)
+- Log files (`*.log`)
+- Environment variables (`.env`)
+
+If you see cache or log files, they won't be committed to git.
 
 ---
 
