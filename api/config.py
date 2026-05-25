@@ -1,11 +1,13 @@
 from pathlib import Path
+import os
 
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
-# Load .env from the project root (one level above backend/)
+# Try to load .env from parent directory (for local dev only)
 _env_path = Path(__file__).resolve().parent.parent / ".env"
-load_dotenv(_env_path)
+if _env_path.exists():
+    load_dotenv(_env_path)
 
 
 class Settings(BaseSettings):
@@ -17,7 +19,7 @@ class Settings(BaseSettings):
     exa_api_key: str = ""
 
     class Config:
-        env_file = str(_env_path)
+        # Don't require env_file to exist (works on Vercel with env vars)
         extra = "ignore"  # Ignore extra fields like VITE_API_URL
 
 
