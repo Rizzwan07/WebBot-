@@ -1,4 +1,4 @@
-# WebBot AI 🤖
+# WebBot AI
 
 A Perplexity-style AI web search chatbot with live citations, multi-thread conversations, inline source tooltips, and an interactive particle animation background.
 
@@ -67,7 +67,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173** and start chatting! 🚀
+Open **http://localhost:5173** and start chatting.
 
 ---
 
